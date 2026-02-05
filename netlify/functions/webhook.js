@@ -4,8 +4,8 @@ const { MercadoPagoConfig, Payment } = require('mercadopago');
 const { createClient } = require('@supabase/supabase-js');
 
 // ===== SUPABASE =====
-const SUPABASE_URL = 'https://yyoyxanloloupwoczkhr.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5b3l4YW5sb2xvdXB3b2N6a2hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk2ODM2MjYsImV4cCI6MjA4NTI1OTYyNn0.yV9UszxZW0Ee5X6Zj8OLo1Q_uQfj99RJviaZIImiMAM';
+const SUPABASE_URL = 'https://nlpjugpeexxgtmrcrkwx.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5scGp1Z3BlZXh4Z3RtcmNya3d4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzMTI1MTgsImV4cCI6MjA4NTg4ODUxOH0.44yZ8FSVx2H0gT-jZ-dpPxK_VH9vCwBQ28v36i0PXHA';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ===== MERCADO PAGO =====
