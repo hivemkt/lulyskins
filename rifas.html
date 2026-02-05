@@ -3,27 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rifa de Skins - Borjão Skins</title>
+    <title>Rifa de Skins - Luly Skins</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://sdk.mercadopago.com/js/v2"></script>
-    <style>
-        @font-face {
-            font-family: 'Kenyan Coffee';
-            src: url('fonts/KENYAN_COFFEE_RG.TTF') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-            font-display: swap;
-        }
-        
-        /* Fallback se a fonte não carregar */
-        @supports not (font-display: swap) {
-            .title, .admin-title, .modal-title {
-                font-family: 'Bebas Neue', 'Orbitron', sans-serif !important;
-            }
-        }
     <style>
         * {
             margin: 0;
@@ -32,16 +17,19 @@
         }
 
         :root {
-            --purple: #9431ce;
-            --black: #000000;
-            --dark-gray: #0a0a0a;
-            --purple-glow: rgba(148, 49, 206, 0.4);
+            --primary-blue: #0a1628;
+            --accent-blue: #1e3a8a;
+            --bright-blue: #3b82f6;
+            --electric-blue: #60a5fa;
+            --text-light: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border-color: #1e293b;
         }
 
         body {
-            font-family: 'Rajdhani', sans-serif;
-            background: var(--black);
-            color: white;
+            font-family: 'Barlow', sans-serif;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, #0f172a 100%);
+            color: var(--text-light);
             min-height: 100vh;
             overflow-x: hidden;
         }
@@ -64,8 +52,8 @@
             width: 200%;
             height: 200%;
             background: 
-                radial-gradient(circle at 20% 50%, var(--purple-glow) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, var(--purple-glow) 0%, transparent 50%);
+                radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(96, 165, 250, 0.08) 0%, transparent 50%);
             animation: bgRotate 20s linear infinite;
         }
 
@@ -97,27 +85,31 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
-            filter: drop-shadow(0 10px 30px var(--purple-glow));
+            filter: drop-shadow(0 10px 30px rgba(59, 130, 246, 0.4));
         }
 
         .title {
-            font-family: 'Kenyan Coffee', 'Orbitron', sans-serif;
+            font-family: 'Bebas Neue', cursive;
             font-size: 36px;
             font-weight: 900;
-            color: var(--purple);
+            background: linear-gradient(135deg, white 0%, var(--electric-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 10px;
+            letter-spacing: 2px;
         }
 
         .loading {
             text-align: center;
             padding: 60px 20px;
             font-size: 20px;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text-muted);
         }
 
         .raffle-card {
-            background: rgba(10, 10, 10, 0.8);
-            border: 2px solid rgba(148, 49, 206, 0.3);
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 30px;
             backdrop-filter: blur(10px);
@@ -127,19 +119,19 @@
         .raffle-image {
             width: 100%;
             max-width: 500px;
-            height: 500px;      /* ✅ Altura igual à largura = quadrado */
+            height: 500px;
             margin: 0 auto 30px;
             border-radius: 15px;
             overflow: hidden;
-            border: 3px solid var(--purple);
-            box-shadow: 0 10px 40px var(--purple-glow);
+            border: 3px solid var(--bright-blue);
+            box-shadow: 0 10px 40px rgba(59, 130, 246, 0.3);
         }
 
         .raffle-image img {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* ✅ Mostra a imagem completa sem cortar */
-            background: rgba(0, 0, 0, 0.3); /* Fundo caso sobre espaço */
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.3);
         }
 
         .raffle-info {
@@ -148,16 +140,17 @@
         }
 
         .raffle-title {
-            font-family: 'Kenyan Coffee', 'Orbitron', sans-serif;
+            font-family: 'Bebas Neue', cursive;
             font-size: 28px;
             font-weight: 700;
             color: white;
             margin-bottom: 10px;
+            letter-spacing: 1px;
         }
 
         .raffle-description {
             font-size: 16px;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--text-muted);
             margin-bottom: 20px;
         }
 
@@ -170,8 +163,8 @@
         }
 
         .stat-box {
-            background: rgba(148, 49, 206, 0.1);
-            border: 2px solid var(--purple);
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid var(--bright-blue);
             border-radius: 10px;
             padding: 15px 25px;
             text-align: center;
@@ -179,15 +172,15 @@
 
         .stat-label {
             font-size: 14px;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text-muted);
             margin-bottom: 5px;
         }
 
         .stat-value {
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Barlow', sans-serif;
             font-size: 24px;
             font-weight: 700;
-            color: var(--purple);
+            color: var(--electric-blue);
         }
 
         .promo-badge {
@@ -211,11 +204,13 @@
         }
 
         .section-title {
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Bebas Neue', cursive;
             font-size: 22px;
             font-weight: 700;
             margin-bottom: 20px;
             text-align: center;
+            color: var(--electric-blue);
+            letter-spacing: 1px;
         }
 
         .numbers-grid {
@@ -228,7 +223,7 @@
 
         .number-box {
             aspect-ratio: 1;
-            border: 2px solid rgba(148, 49, 206, 0.3);
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -237,20 +232,20 @@
             font-size: 16px;
             cursor: pointer;
             transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(30, 41, 59, 0.3);
         }
 
         .number-box:hover:not(.sold):not(.reserved) {
-            border-color: var(--purple);
-            background: rgba(148, 49, 206, 0.2);
+            border-color: var(--bright-blue);
+            background: rgba(59, 130, 246, 0.2);
             transform: scale(1.1);
         }
 
         .number-box.selected {
-            background: linear-gradient(135deg, var(--purple), #6b1fa0);
-            border-color: var(--purple);
+            background: linear-gradient(135deg, var(--bright-blue), var(--accent-blue));
+            border-color: var(--electric-blue);
             color: white;
-            box-shadow: 0 0 15px var(--purple-glow);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
         }
 
         .number-box.sold {
@@ -294,12 +289,12 @@
         .checkout-section {
             position: sticky;
             bottom: 0;
-            background: rgba(10, 10, 10, 0.95);
-            border: 2px solid var(--purple);
+            background: rgba(10, 22, 40, 0.95);
+            border: 2px solid var(--bright-blue);
             border-radius: 20px 20px 0 0;
             padding: 25px;
             backdrop-filter: blur(10px);
-            box-shadow: 0 -10px 40px var(--purple-glow);
+            box-shadow: 0 -10px 40px rgba(59, 130, 246, 0.3);
         }
 
         .checkout-info {
@@ -316,30 +311,32 @@
         }
 
         .total-price {
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Bebas Neue', cursive;
             font-size: 32px;
             font-weight: 900;
-            color: var(--purple);
+            color: var(--electric-blue);
+            letter-spacing: 1px;
         }
 
         .checkout-btn {
             width: 100%;
             padding: 18px;
-            background: linear-gradient(135deg, var(--purple), #6b1fa0);
+            background: linear-gradient(135deg, var(--bright-blue), var(--accent-blue));
             border: none;
             border-radius: 12px;
             color: white;
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Bebas Neue', cursive;
             font-size: 20px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .checkout-btn:hover:not(:disabled) {
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px var(--purple-glow);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.5);
         }
 
         .checkout-btn:disabled {
@@ -368,8 +365,8 @@
         }
 
         .modal-content {
-            background: rgba(10, 10, 10, 0.95);
-            border: 2px solid var(--purple);
+            background: rgba(10, 22, 40, 0.95);
+            border: 2px solid var(--bright-blue);
             border-radius: 20px;
             padding: 30px;
             max-width: 600px;
@@ -403,10 +400,11 @@
         }
 
         .modal-title {
-            font-family: 'Kenyan Coffee', sans-serif;
+            font-family: 'Bebas Neue', cursive;
             font-size: 28px;
-            color: var(--purple);
+            color: var(--electric-blue);
             margin-bottom: 20px;
+            letter-spacing: 1px;
         }
 
         #qrCodeContainer {
@@ -429,8 +427,8 @@
             right: 20px;
             width: 50px;
             height: 50px;
-            background: rgba(10, 10, 10, 0.8);
-            border: 2px solid var(--purple);
+            background: rgba(10, 22, 40, 0.8);
+            border: 2px solid var(--bright-blue);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -477,42 +475,48 @@
         }
 
         .admin-title {
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Bebas Neue', cursive;
             font-size: 32px;
             font-weight: 900;
-            color: var(--purple);
+            background: linear-gradient(135deg, white 0%, var(--electric-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
         }
 
         .admin-close {
             background: none;
-            border: 2px solid var(--purple);
+            border: 2px solid var(--bright-blue);
             color: white;
             padding: 12px 24px;
             border-radius: 10px;
             cursor: pointer;
-            font-family: 'Rajdhani', sans-serif;
+            font-family: 'Barlow', sans-serif;
             font-weight: 600;
             transition: all 0.3s;
         }
 
         .admin-close:hover {
-            background: var(--purple);
+            background: var(--bright-blue);
         }
 
         .admin-section {
-            background: rgba(10, 10, 10, 0.8);
-            border: 2px solid rgba(148, 49, 206, 0.3);
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-color);
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 30px;
+            backdrop-filter: blur(10px);
         }
 
         .admin-section-title {
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Bebas Neue', cursive;
             font-size: 24px;
             font-weight: 700;
-            color: var(--purple);
+            color: var(--electric-blue);
             margin-bottom: 20px;
+            letter-spacing: 1px;
         }
 
         .form-group {
@@ -530,18 +534,18 @@
         .form-textarea {
             width: 100%;
             padding: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(148, 49, 206, 0.3);
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             color: white;
-            font-family: 'Rajdhani', sans-serif;
+            font-family: 'Barlow', sans-serif;
             font-size: 16px;
         }
 
         .form-input:focus,
         .form-textarea:focus {
             outline: none;
-            border-color: var(--purple);
+            border-color: var(--bright-blue);
         }
 
         .form-textarea {
@@ -557,19 +561,20 @@
 
         .btn-primary {
             padding: 12px 24px;
-            background: linear-gradient(135deg, var(--purple), #6b1fa0);
+            background: linear-gradient(135deg, var(--bright-blue), var(--accent-blue));
             border: none;
             border-radius: 10px;
             color: white;
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Bebas Neue', cursive;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
+            letter-spacing: 1px;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px var(--purple-glow);
+            box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4);
         }
 
         .stats-grid {
@@ -580,8 +585,8 @@
         }
 
         .stat-card {
-            background: rgba(148, 49, 206, 0.1);
-            border: 2px solid var(--purple);
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid var(--bright-blue);
             border-radius: 15px;
             padding: 20px;
             text-align: center;
@@ -593,8 +598,8 @@
         }
 
         .sale-item {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(148, 49, 206, 0.3);
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-color);
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 10px;
@@ -615,7 +620,7 @@
         }
 
         .number-badge {
-            background: var(--purple);
+            background: var(--bright-blue);
             padding: 4px 8px;
             border-radius: 5px;
             font-size: 12px;
@@ -629,7 +634,7 @@
             border: none;
             border-radius: 8px;
             color: white;
-            font-family: 'Rajdhani', sans-serif;
+            font-family: 'Barlow', sans-serif;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -654,7 +659,7 @@
             border: none;
             border-radius: 8px;
             color: black;
-            font-family: 'Rajdhani', sans-serif;
+            font-family: 'Barlow', sans-serif;
             font-size: 14px;
             font-weight: 700;
             cursor: pointer;
@@ -679,7 +684,7 @@
             .raffle-image {
                 max-width: 100%;
                 height: auto;
-                aspect-ratio: 1 / 1; /* Mantém quadrado no mobile */
+                aspect-ratio: 1 / 1;
             }
 
             .numbers-grid {
@@ -749,11 +754,11 @@
                     
                     <div class="legend">
                         <div class="legend-item">
-                            <div class="legend-box" style="background: rgba(255,255,255,0.05); border-color: rgba(148,49,206,0.3);"></div>
+                            <div class="legend-box" style="background: rgba(30,41,59,0.3); border-color: var(--border-color);"></div>
                             <span>Disponível</span>
                         </div>
                         <div class="legend-item">
-                            <div class="legend-box" style="background: linear-gradient(135deg, var(--purple), #6b1fa0); border-color: var(--purple);"></div>
+                            <div class="legend-box" style="background: linear-gradient(135deg, var(--bright-blue), var(--accent-blue)); border-color: var(--electric-blue);"></div>
                             <span>Selecionado</span>
                         </div>
                         <div class="legend-item">
@@ -797,8 +802,8 @@
                     <div id="qrCodeContainer"></div>
                 </div>
                 
-                <div style="background: rgba(148, 49, 206, 0.1); padding: 20px; border-radius: 15px; margin: 20px 0;">
-                    <p style="margin-bottom: 10px; font-size: 14px; color: rgba(255,255,255,0.7);">
+                <div style="background: rgba(59, 130, 246, 0.1); padding: 20px; border-radius: 15px; margin: 20px 0;">
+                    <p style="margin-bottom: 10px; font-size: 14px; color: var(--text-muted);">
                         Ou copie o código PIX:
                     </p>
                     <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px; word-break: break-all; font-size: 12px; margin-bottom: 10px;" id="pixCode"></div>
@@ -811,7 +816,7 @@
                     <p style="color: #00ff88; font-weight: 700; margin-bottom: 10px;">
                         ⏱️ Aguardando pagamento...
                     </p>
-                    <p style="font-size: 14px; color: rgba(255,255,255,0.7); margin-bottom: 15px;">
+                    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">
                         Seus números estão reservados por 15 minutos.<br>
                         Assim que o pagamento for confirmado, você receberá seus números!
                     </p>
@@ -825,7 +830,7 @@
             <div id="thankYouMini" style="display: none; text-align: center; padding: 40px;">
                 <div style="font-size: 64px; margin-bottom: 20px;">✅</div>
                 <h3 style="color: #00ff88; font-size: 24px; margin-bottom: 10px;">Pagamento Confirmado!</h3>
-                <p style="font-size: 16px; color: rgba(255,255,255,0.8);">
+                <p style="font-size: 16px; color: var(--text-light);">
                     Seus números foram liberados com sucesso!<br>
                     Boa sorte! 🍀
                 </p>
@@ -864,11 +869,11 @@
                 <div class="form-group">
                     <label class="form-label">Imagem do Prêmio</label>
                     <input type="file" class="form-input" id="adminImageFile" accept="image/*" onchange="handleImageUpload(event)">
-                    <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 5px;">
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">
                         Ou use uma URL:
                     </p>
                     <input type="url" class="form-input" id="adminImage" placeholder="https://exemplo.com/imagem.jpg" style="margin-top: 5px;">
-                    <div id="imagePreview" style="margin-top: 10px; max-width: 200px; border-radius: 10px; overflow: hidden; border: 2px solid var(--purple); display: none;">
+                    <div id="imagePreview" style="margin-top: 10px; max-width: 200px; border-radius: 10px; overflow: hidden; border: 2px solid var(--bright-blue); display: none;">
                         <img id="previewImg" style="width: 100%; height: auto;">
                     </div>
                 </div>
@@ -881,7 +886,7 @@
                 <div class="form-group">
                     <label class="form-label">Quantidade de Números (Cotas)</label>
                     <input type="number" class="form-input" id="adminTotalNumbers" placeholder="100" min="10" max="10000" value="100">
-                    <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 5px;">
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">
                         Escolha quantos números terá a rifa (ex: 50, 100, 500, 1000)
                     </p>
                 </div>
@@ -889,7 +894,7 @@
                 <div class="form-group">
                     <label class="form-label">Limite de Cotas por Pessoa</label>
                     <input type="number" class="form-input" id="adminMaxPerPerson" placeholder="0" min="0" max="100" value="0">
-                    <p style="font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 5px;">
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">
                         0 = sem limite | Ex: 5 = cada pessoa pode comprar no máximo 5 números
                     </p>
                 </div>
@@ -944,7 +949,7 @@
             <div class="admin-section">
                 <h2 class="admin-section-title">🛒 Vendas Realizadas</h2>
                 <div class="sales-list" id="salesList">
-                    <p style="text-align: center; color: rgba(255,255,255,0.4);">Nenhuma venda ainda</p>
+                    <p style="text-align: center; color: var(--text-muted);">Nenhuma venda ainda</p>
                 </div>
             </div>
 
@@ -1044,10 +1049,10 @@
                     document.getElementById('loadingMessage').innerHTML = `
                         <div style="text-align: center; padding: 80px 20px;">
                             <div style="font-size: 80px; margin-bottom: 30px;">🎰</div>
-                            <h2 style="font-family: 'Kenyan Coffee', 'Orbitron', sans-serif; font-size: 42px; color: var(--purple); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;">
+                            <h2 style="font-family: 'Bebas Neue', cursive; font-size: 42px; background: linear-gradient(135deg, white 0%, var(--electric-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px;">
                                 No Momento<br>Sem Rifas
                             </h2>
-                            <p style="color: rgba(255,255,255,0.7); font-size: 18px; max-width: 500px; margin: 0 auto;">
+                            <p style="color: var(--text-muted); font-size: 18px; max-width: 500px; margin: 0 auto;">
                                 Não há nenhuma rifa ativa no momento.<br>
                                 Aguarde novas rifas em breve!
                             </p>
@@ -1069,7 +1074,7 @@
                         <h2 style="font-size: 24px; color: #ff4444; margin-bottom: 15px;">
                             Erro ao Carregar Rifa
                         </h2>
-                        <p style="color: rgba(255,255,255,0.6); font-size: 14px;">
+                        <p style="color: var(--text-muted); font-size: 14px;">
                             ${error.message || 'Erro desconhecido'}
                         </p>
                     </div>
@@ -1213,12 +1218,12 @@
                     // Dentro do limite
                     checkoutBtn.disabled = false;
                     checkoutBtn.textContent = `Finalizar Compra via PIX (${count}/${limit} cotas)`;
-                    checkoutBtn.style.background = 'linear-gradient(135deg, var(--purple), #6b1fa0)';
+                    checkoutBtn.style.background = 'linear-gradient(135deg, var(--bright-blue), var(--accent-blue))';
                 }
             } else {
                 // Sem limite
                 document.getElementById('checkoutBtn').textContent = 'Finalizar Compra via PIX';
-                document.getElementById('checkoutBtn').style.background = 'linear-gradient(135deg, var(--purple), #6b1fa0)';
+                document.getElementById('checkoutBtn').style.background = 'linear-gradient(135deg, var(--bright-blue), var(--accent-blue))';
             }
 
             document.getElementById('totalPrice').textContent = `R$ ${total.toFixed(2)}`;
@@ -1542,7 +1547,7 @@
                 document.getElementById('btnCreateRaffle').style.display = 'inline-block';
                 
                 // Carregar vendas (vazio)
-                document.getElementById('salesList').innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.4);">Nenhuma venda ainda</p>';
+                document.getElementById('salesList').innerHTML = '<p style="text-align: center; color: var(--text-muted);">Nenhuma venda ainda</p>';
                 return;
             }
 
@@ -1822,7 +1827,7 @@
                 const salesList = document.getElementById('salesList');
                 
                 if (data.length === 0) {
-                    salesList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.4);">Nenhuma venda ainda</p>';
+                    salesList.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Nenhuma venda ainda</p>';
                     return;
                 }
 
@@ -1867,48 +1872,6 @@
             document.getElementById('adminTotalSold').textContent = `R$ ${totalSold.toFixed(2)}`;
             document.getElementById('adminNumbersSold').textContent = `${soldNumbers.size}/${currentRaffle.total_numbers || 100}`;
             document.getElementById('adminBuyersCount').textContent = approvedSales.length;
-        }
-
-        // Aprovar venda manualmente (modo simulação)
-        // Testar conexão com Supabase
-        async function testSupabaseConnection() {
-            console.log('🧪 Testando conexão Supabase...');
-            
-            try {
-                // Testar SELECT
-                console.log('1️⃣ Testando SELECT...');
-                const { data: selectData, error: selectError } = await supabaseClient
-                    .from('raffle_sales')
-                    .select('*')
-                    .limit(1);
-                
-                console.log('SELECT resultado:', { selectData, selectError });
-                
-                // Testar UPDATE (em uma venda fake)
-                console.log('2️⃣ Testando UPDATE...');
-                const { data: updateData, error: updateError } = await supabaseClient
-                    .from('raffle_sales')
-                    .update({ payment_status: 'approved' })
-                    .eq('id', '00000000-0000-0000-0000-000000000000')
-                    .select();
-                
-                console.log('UPDATE resultado:', { updateData, updateError });
-                
-                // Testar DELETE (em uma venda fake)
-                console.log('3️⃣ Testando DELETE...');
-                const { data: deleteData, error: deleteError } = await supabaseClient
-                    .from('raffle_sales')
-                    .delete()
-                    .eq('id', '00000000-0000-0000-0000-000000000000');
-                
-                console.log('DELETE resultado:', { deleteData, deleteError });
-                
-                alert('🧪 Testes concluídos! Veja o console (F12).');
-                
-            } catch (error) {
-                console.error('❌ Erro nos testes:', error);
-                alert('❌ Erro: ' + error.message);
-            }
         }
 
         async function approveSaleManually(saleId) {
