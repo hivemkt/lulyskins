@@ -72,7 +72,7 @@ exports.handler = async (event) => {
     // ===============================
     const client = new MercadoPagoConfig({
       accessToken: process.env.MP_ACCESS_TOKEN || 
-        'APP_USR-861897508909678-020211-124d4fa380e582c73f57be0350a9945a-136456359'
+        ''
     });
 
     const payment = new Payment(client);
@@ -90,7 +90,7 @@ exports.handler = async (event) => {
         last_name: payer.last_name || payer.first_name || 'PIX'
       },
       external_reference: external_reference || `PIX-${Date.now()}`,
-      notification_url: 'https://www.borjaoskins.com/.netlify/functions/webhook'
+      notification_url: ''
     };
 
     console.log('📤 ENVIANDO PARA MP:', paymentData);
