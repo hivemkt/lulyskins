@@ -1882,33 +1882,295 @@
         }
 
         async function approveSaleManually(saleId) {
-            if (!confirm('✅ Aprovar pagamento?')) return;
-
             try {
-                console.log('✅ Aprovando venda:', saleId);
+                console.log('🔍 Verificando conflitos para venda:', saleId);
 
-                const { data, error } = await supabaseClient
+                // Buscar dados da venda
+                const { data: sale, error: saleError } = await supabaseClient
+                    .from('raffle_sales')
+                    .select('*')
+                    .eq('id', saleId)
+                    .single();
+
+                if (saleError) throw saleError;
+
+                // Buscar números já vendidos/reservados (excluindo esta venda)
+                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+                
+                const { data: otherSales, error: checkError } = await supabaseClient
+                    .from('raffle_sales')
+                    .select('numbers, payment_status')
+                    .eq('raffle_id', currentRaffle.id)
+                    .neq('id', saleId) // Excluir esta venda
+                    .or(`payment_status.eq.approved,and(payment_status.eq.reserved,created_at.gte.${fiveMinutesAgo})`);
+
+                if (checkError) throw checkError;
+
+                // Criar set de números ocupados
+                const occupiedNumbers = new Set();
+                if (otherSales && otherSales.length > 0) {
+                    otherSales.forEach(s => {
+                        if (s.numbers && Array.isArray(s.numbers)) {
+                            s.numbers.forEach(num => occupiedNumbers.add(num));
+                        }
+                    });
+                }
+
+                // Verificar conflitos
+                const requestedNumbers = sale.numbers;
+                const conflictNumbers = requestedNumbers.filter(num => occupiedNumbers.has(num));
+                const freeRequestedNumbers = requestedNumbers.filter(num => !occupiedNumbers.has(num));
+
+                console.log('📊 Números solicitados:', requestedNumbers);
+                console.log('❌ Conflitos:', conflictNumbers);
+                console.log('✅ Livres solicitados:', freeRequestedNumbers);
+
+                // SEM CONFLITOS - Aprovar direto
+                if (conflictNumbers.length === 0) {
+                    if (!confirm('✅ Aprovar pagamento?\n\nNenhum conflito detectado.')) return;
+
+                    const { error } = await supabaseClient
+                        .from('raffle_sales')
+                        .update({ payment_status: 'approved' })
+                        .eq('id', saleId);
+
+                    if (error) throw error;
+
+                    alert('✅ Aprovado com sucesso!');
+                    await reloadAdminData();
+                    return;
+                }
+
+                // COM CONFLITOS - Verificar números disponíveis
+                const totalNumbers = currentRaffle.total_numbers || 100;
+                const availableNumbers = [];
+                for (let i = 1; i <= totalNumbers; i++) {
+                    if (!occupiedNumbers.has(i)) {
+                        availableNumbers.push(i);
+                    }
+                }
+
+                console.log('🔢 Números disponíveis na rifa:', availableNumbers.length);
+
+                const needsRealocation = conflictNumbers.length;
+                const canReallocate = availableNumbers.length >= needsRealocation;
+
+                // Montar mensagem de conflito
+                let message = `⚠️ CONFLITO DETECTADO!\n\n`;
+                message += `Cliente: ${sale.buyer_name}\n`;
+                message += `Telefone: ${sale.buyer_phone}\n`;
+                message += `Valor: R$ ${sale.total_amount.toFixed(2)}\n\n`;
+                message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                message += `📊 NÚMEROS SOLICITADOS: ${requestedNumbers.length}\n`;
+                message += `✅ Livres: ${freeRequestedNumbers.length} ${freeRequestedNumbers.length > 0 ? '→ ' + freeRequestedNumbers.join(', ') : ''}\n`;
+                message += `❌ Conflitos: ${conflictNumbers.length} → ${conflictNumbers.join(', ')}\n\n`;
+
+                if (canReallocate) {
+                    message += `🔄 REALOCAÇÃO DISPONÍVEL:\n`;
+                    message += `Existem ${availableNumbers.length} números livres.\n`;
+                    message += `Posso realocar ${needsRealocation} número(s).\n\n`;
+                    message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                    message += `Escolha uma opção:\n\n`;
+                    message += `1️⃣ APROVAR APENAS LIVRES (${freeRequestedNumbers.length} números)\n`;
+                    message += `   → Cliente recebe: ${freeRequestedNumbers.join(', ')}\n`;
+                    message += `   → Reembolso parcial necessário\n\n`;
+                    message += `2️⃣ APROVAR E REALOCAR (${requestedNumbers.length} números)\n`;
+                    message += `   → Cliente mantém: ${freeRequestedNumbers.join(', ')}\n`;
+                    message += `   → Novos números: ${needsRealocation} aleatórios\n`;
+                    message += `   → Valor total mantido`;
+                } else {
+                    message += `❌ SEM REALOCAÇÃO:\n`;
+                    message += `Só restam ${availableNumbers.length} número(s) livre(s).\n`;
+                    message += `Não é possível realocar ${needsRealocation} número(s).\n\n`;
+                    message += `━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                    if (freeRequestedNumbers.length > 0) {
+                        message += `Você pode:\n\n`;
+                        message += `1️⃣ APROVAR APENAS LIVRES (${freeRequestedNumbers.length} números)\n`;
+                        message += `   → Cliente recebe: ${freeRequestedNumbers.join(', ')}\n`;
+                        message += `   → Reembolso parcial necessário\n\n`;
+                        message += `2️⃣ CANCELAR e devolver valor total`;
+                    } else {
+                        message += `⚠️ TODOS os números estão ocupados!\n`;
+                        message += `Devolva o valor total ao cliente.`;
+                    }
+                }
+
+                // Mostrar modal customizado
+                showConflictModal(sale, freeRequestedNumbers, conflictNumbers, availableNumbers, canReallocate);
+
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                alert('❌ Erro: ' + error.message);
+            }
+        }
+
+        function showConflictModal(sale, freeNumbers, conflictNumbers, availableNumbers, canReallocate) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.95);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            `;
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: rgba(10, 22, 40, 0.95);
+                border: 2px solid #ff4444;
+                border-radius: 20px;
+                padding: 30px;
+                max-width: 600px;
+                width: 100%;
+                max-height: 90vh;
+                overflow-y: auto;
+                backdrop-filter: blur(10px);
+            `;
+
+            const needsRealocation = conflictNumbers.length;
+            const totalRequested = sale.numbers.length;
+
+            content.innerHTML = `
+                <h2 style="font-family: 'Bebas Neue', cursive; font-size: 28px; color: #ff4444; margin-bottom: 20px; text-align: center;">
+                    ⚠️ CONFLITO DE NÚMEROS
+                </h2>
+
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="margin-bottom: 8px;"><strong>Cliente:</strong> ${sale.buyer_name}</div>
+                    <div style="margin-bottom: 8px;"><strong>Telefone:</strong> ${sale.buyer_phone}</div>
+                    <div><strong>Valor pago:</strong> R$ ${sale.total_amount.toFixed(2)}</div>
+                </div>
+
+                <div style="background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                    <div style="font-weight: 700; margin-bottom: 10px; color: #60a5fa;">📊 RESUMO:</div>
+                    <div style="margin-bottom: 5px;">Total solicitado: ${totalRequested} número(s)</div>
+                    <div style="margin-bottom: 5px; color: #00ff88;">✅ Livres: ${freeNumbers.length} → ${freeNumbers.length > 0 ? freeNumbers.join(', ') : 'Nenhum'}</div>
+                    <div style="color: #ff4444;">❌ Conflitos: ${conflictNumbers.length} → ${conflictNumbers.join(', ')}</div>
+                </div>
+
+                ${canReallocate ? `
+                    <div style="background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                        <div style="font-weight: 700; margin-bottom: 10px; color: #00ff88;">🔄 REALOCAÇÃO DISPONÍVEL</div>
+                        <div>Existem ${availableNumbers.length} número(s) livre(s) na rifa.</div>
+                        <div>Posso realocar ${needsRealocation} número(s) automaticamente.</div>
+                    </div>
+                ` : `
+                    <div style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ff4444; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                        <div style="font-weight: 700; margin-bottom: 10px; color: #ff4444;">❌ REALOCAÇÃO IMPOSSÍVEL</div>
+                        <div>Só restam ${availableNumbers.length} número(s) livre(s).</div>
+                        <div>Não é possível realocar ${needsRealocation} número(s).</div>
+                    </div>
+                `}
+
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    ${freeNumbers.length > 0 ? `
+                        <button onclick="approveOnlyFree('${sale.id}', ${JSON.stringify(freeNumbers)})" 
+                                style="width: 100%; padding: 15px; background: #ffa500; border: none; border-radius: 10px; color: black; font-weight: 700; cursor: pointer; font-size: 16px;">
+                            📋 APROVAR APENAS LIVRES (${freeNumbers.length} números)
+                        </button>
+                    ` : ''}
+                    
+                    ${canReallocate ? `
+                        <button onclick="approveAndReallocate('${sale.id}', ${JSON.stringify(freeNumbers)}, ${JSON.stringify(conflictNumbers)}, ${JSON.stringify(availableNumbers)})" 
+                                style="width: 100%; padding: 15px; background: #00ff88; border: none; border-radius: 10px; color: black; font-weight: 700; cursor: pointer; font-size: 16px;">
+                            🔄 APROVAR E REALOCAR (${totalRequested} números)
+                        </button>
+                    ` : ''}
+                    
+                    <button onclick="this.closest('[style*=fixed]').remove()" 
+                            style="width: 100%; padding: 15px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; color: white; font-weight: 600; cursor: pointer; font-size: 16px;">
+                        ✕ Cancelar
+                    </button>
+                </div>
+
+                ${freeNumbers.length === 0 && !canReallocate ? `
+                    <div style="background: rgba(255, 68, 68, 0.2); border: 2px solid #ff4444; border-radius: 10px; padding: 15px; margin-top: 15px; text-align: center;">
+                        <div style="font-weight: 700; color: #ff4444; margin-bottom: 5px;">⚠️ ATENÇÃO</div>
+                        <div>Todos os números estão ocupados.</div>
+                        <div>Devolva R$ ${sale.total_amount.toFixed(2)} ao cliente.</div>
+                    </div>
+                ` : ''}
+            `;
+
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+        }
+
+        async function approveOnlyFree(saleId, freeNumbers) {
+            try {
+                const pricePerNumber = currentRaffle.price_per_number;
+                const newTotal = freeNumbers.length * pricePerNumber;
+
+                if (!confirm(`Aprovar ${freeNumbers.length} número(s)?\n\nNúmeros: ${freeNumbers.join(', ')}\nNovo valor: R$ ${newTotal.toFixed(2)}\n\n⚠️ Você precisará devolver a diferença ao cliente!`)) {
+                    return;
+                }
+
+                const { error } = await supabaseClient
                     .from('raffle_sales')
                     .update({ 
-                        payment_status: 'approved'
+                        payment_status: 'approved',
+                        numbers: freeNumbers,
+                        total_amount: newTotal
                     })
-                    .eq('id', saleId)
-                    .select();
+                    .eq('id', saleId);
 
                 if (error) throw error;
 
-                console.log('✅ Venda aprovada:', data);
-                alert('✅ Aprovado!');
-                
-                await loadSoldNumbers();
-                renderNumbers();
-                await loadSales();
-                updateAdminStats();
+                document.querySelector('[style*="position: fixed"]').remove();
+                alert(`✅ Aprovado!\n\nNúmeros liberados: ${freeNumbers.join(', ')}\nNovo valor: R$ ${newTotal.toFixed(2)}\n\n⚠️ Devolva a diferença ao cliente!`);
+                await reloadAdminData();
 
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('❌ Erro:', error);
                 alert('❌ Erro: ' + error.message);
             }
+        }
+
+        async function approveAndReallocate(saleId, freeNumbers, conflictNumbers, availableNumbers) {
+            try {
+                const needsRealocation = conflictNumbers.length;
+                
+                // Selecionar números aleatórios dos disponíveis
+                const shuffled = [...availableNumbers].sort(() => Math.random() - 0.5);
+                const newNumbers = shuffled.slice(0, needsRealocation);
+                
+                const finalNumbers = [...freeNumbers, ...newNumbers].sort((a, b) => a - b);
+
+                if (!confirm(`Realocar automaticamente?\n\nNúmeros mantidos: ${freeNumbers.join(', ')}\nNovos números: ${newNumbers.join(', ')}\n\nTotal final: ${finalNumbers.join(', ')}`)) {
+                    return;
+                }
+
+                const { error } = await supabaseClient
+                    .from('raffle_sales')
+                    .update({ 
+                        payment_status: 'approved',
+                        numbers: finalNumbers
+                    })
+                    .eq('id', saleId);
+
+                if (error) throw error;
+
+                document.querySelector('[style*="position: fixed"]').remove();
+                alert(`✅ Aprovado e realocado!\n\nNúmeros finais:\n${finalNumbers.join(', ')}\n\n💬 Avise o cliente sobre os novos números!`);
+                await reloadAdminData();
+
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                alert('❌ Erro: ' + error.message);
+            }
+        }
+
+        async function reloadAdminData() {
+            await loadSoldNumbers();
+            renderNumbers();
+            await loadSales();
+            updateAdminStats();
         }
 
         async function removePendingSale(saleId) {
