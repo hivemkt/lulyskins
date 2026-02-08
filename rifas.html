@@ -435,14 +435,14 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            opacity: 0.3;
+            opacity: 0; /* 👈 Invisível! */
             transition: all 0.3s;
             z-index: 999;
             font-size: 24px;
         }
 
         .admin-trigger:hover {
-            opacity: 1;
+            opacity: 1; /* 👈 Aparece no hover! */
             transform: scale(1.1);
         }
 
@@ -1807,12 +1807,17 @@
 
                 // Filtrar vendas válidas (aprovadas OU reservadas há menos de 5 min)
                 const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+                console.log('⏰ Tempo atual:', new Date());
+                console.log('⏰ 5 minutos atrás:', fiveMinutesAgo);
+                
                 const validSales = data.filter(sale => {
                     if (sale.payment_status === 'approved') {
                         return true; // Sempre mostrar aprovadas
                     }
                     if (sale.payment_status === 'reserved') {
                         const saleDate = new Date(sale.created_at);
+                        const minutesAgo = (new Date() - saleDate) / 60000;
+                        console.log(`📊 Venda ${sale.buyer_name}: ${minutesAgo.toFixed(1)} minutos atrás`);
                         return saleDate >= fiveMinutesAgo; // Só mostrar se < 5 min
                     }
                     return false; // Ignorar outros status
