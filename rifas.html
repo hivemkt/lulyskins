@@ -1890,8 +1890,7 @@
                 const { data, error } = await supabaseClient
                     .from('raffle_sales')
                     .update({ 
-                        payment_status: 'approved',
-                        updated_at: new Date().toISOString()
+                        payment_status: 'approved'
                     })
                     .eq('id', saleId)
                     .select();
