@@ -8,5 +8,5 @@ window.CONFIG = {
     CLIENT_EMAIL: 'yurimg31@gmail.com',
     
     // Admin
-    ADMIN_PASSWORD: 'senhaluly123'
+    ADMIN_PASSWORD: 'hospital1974'
 };
