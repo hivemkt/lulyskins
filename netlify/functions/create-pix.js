@@ -1,143 +1,139 @@
-// Netlify Function — Create PIX Payment
-// Mercado Pago SDK v2
-// Produção | Seguro | Validado
-const { MercadoPagoConfig, Payment } = require('mercadopago');
+const fetch = require('node-fetch');
 
-exports.handler = async (event) => {
-  // ===============================
-  // CORS
-  // ===============================
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json'
-  };
+// Access Token do Mercado Pago
+const ACCESS_TOKEN = 'APP_USR-2110354351670786-020516-b41ee554dbbbbc79c6a32ca9bb826019-44207380';
 
-  // OPTIONS (CORS preflight)
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
+exports.handler = async (event, context) => {
+    // CORS Headers
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json'
     };
-  }
 
-  // Apenas POST
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
-  }
-
-  try {
-    // ===============================
-    // Parse body
-    // ===============================
-    const body = JSON.parse(event.body);
-    const {
-      transaction_amount,
-      description,
-      payer,
-      external_reference
-    } = body;
-
-    console.log('📥 BODY RECEBIDO:', body);
-
-    // ===============================
-    // Validações fortes
-    // ===============================
-    const amount = Number(transaction_amount);
-    if (!amount || isNaN(amount)) {
-      throw new Error('Invalid transaction_amount');
+    // Handle OPTIONS request (CORS preflight)
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers,
+            body: ''
+        };
     }
 
-    if (amount <= 0) {
-      throw new Error('Transaction amount must be greater than zero');
+    // Only accept POST
+    if (event.httpMethod !== 'POST') {
+        return {
+            statusCode: 405,
+            headers,
+            body: JSON.stringify({ error: 'Method not allowed' })
+        };
     }
 
-    // trava de segurança (opcional)
-    if (amount > 10000) {
-      throw new Error('Transaction amount too high');
+    try {
+        // Parse request body
+        const paymentData = JSON.parse(event.body);
+
+        console.log('📥 Recebendo solicitação de pagamento:', {
+            amount: paymentData.transaction_amount,
+            description: paymentData.description,
+            external_reference: paymentData.external_reference
+        });
+
+        // Validações
+        if (!paymentData.transaction_amount || paymentData.transaction_amount <= 0) {
+            throw new Error('Valor inválido');
+        }
+
+        if (!paymentData.description) {
+            throw new Error('Descrição é obrigatória');
+        }
+
+        // Preparar payload para Mercado Pago
+        const mpPayload = {
+            transaction_amount: parseFloat(paymentData.transaction_amount),
+            description: paymentData.description,
+            payment_method_id: 'pix',
+            payer: {
+                email: paymentData.payer.email,
+                first_name: paymentData.payer.first_name,
+                last_name: paymentData.payer.last_name
+            }
+        };
+
+        // Adicionar notification_url se fornecido
+        if (paymentData.notification_url) {
+            mpPayload.notification_url = paymentData.notification_url;
+        }
+
+        // Adicionar external_reference se fornecido
+        if (paymentData.external_reference) {
+            mpPayload.external_reference = paymentData.external_reference;
+        }
+
+        console.log('📤 Enviando para Mercado Pago:', mpPayload);
+
+        // Fazer request para Mercado Pago API
+        const response = await fetch('https://api.mercadopago.com/v1/payments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${ACCESS_TOKEN}`,
+                'X-Idempotency-Key': `${Date.now()}-${Math.random()}`
+            },
+            body: JSON.stringify(mpPayload)
+        });
+
+        const responseData = await response.json();
+
+        console.log('📥 Resposta do Mercado Pago:', {
+            status: response.status,
+            id: responseData.id,
+            status_payment: responseData.status
+        });
+
+        // Verificar se houve erro
+        if (!response.ok) {
+            console.error('❌ Erro do Mercado Pago:', responseData);
+            throw new Error(responseData.message || 'Erro ao criar pagamento');
+        }
+
+        // Extrair dados do PIX
+        const pixData = {
+            id: responseData.id,
+            status: responseData.status,
+            qr_code: responseData.point_of_interaction?.transaction_data?.qr_code || null,
+            qr_code_base64: responseData.point_of_interaction?.transaction_data?.qr_code_base64 || null,
+            ticket_url: responseData.point_of_interaction?.transaction_data?.ticket_url || null
+        };
+
+        // Verificar se QR Code foi gerado
+        if (!pixData.qr_code || !pixData.qr_code_base64) {
+            console.error('❌ QR Code não gerado:', responseData);
+            throw new Error('QR Code não foi gerado pelo Mercado Pago');
+        }
+
+        console.log('✅ Pagamento PIX criado com sucesso!', {
+            payment_id: pixData.id,
+            has_qr_code: !!pixData.qr_code
+        });
+
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(pixData)
+        };
+
+    } catch (error) {
+        console.error('❌ Erro na function:', error);
+        
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({
+                error: error.message || 'Erro ao processar pagamento',
+                details: error.toString()
+            })
+        };
     }
-
-    if (!payer?.email) {
-      throw new Error('Payer email is required');
-    }
-
-    // ===============================
-    // Mercado Pago Client (PRODUÇÃO)
-    // ===============================
-    const client = new MercadoPagoConfig({
-      accessToken: process.env.MP_ACCESS_TOKEN || 
-        'APP_USR-2110354351670786-020516-b41ee554dbbbbc79c6a32ca9bb826019-44207380'
-    });
-
-    const payment = new Payment(client);
-
-    // ===============================
-    // Criação do PIX
-    // ===============================
-    const paymentData = {
-      transaction_amount: amount, // ⚠️ SEM *100
-      description: description || 'Pagamento PIX',
-      payment_method_id: 'pix',
-      payer: {
-        email: payer.email,
-        first_name: payer.first_name || 'Cliente',
-        last_name: payer.last_name || payer.first_name || 'PIX'
-      },
-      external_reference: external_reference || `PIX-${Date.now()}`,
-      notification_url: ''
-    };
-
-    console.log('📤 ENVIANDO PARA MP:', paymentData);
-
-    const result = await payment.create({ body: paymentData });
-
-    console.log('✅ PIX CRIADO:', {
-      id: result.id,
-      amount: result.transaction_amount,
-      status: result.status
-    });
-
-    // ===============================
-    // 🔧 CORREÇÃO: Fallback para ambos os caminhos do QR Code
-    // ===============================
-    const qrCode = result.point_of_interaction?.transaction_data?.qr_code || result.qr_code;
-    const qrCodeBase64 = result.point_of_interaction?.transaction_data?.qr_code_base64 || result.qr_code_base64;
-
-    console.log('🔍 QR Code presente:', !!qrCode);
-    console.log('🔍 QR Code Base64 presente:', !!qrCodeBase64);
-
-    // ===============================
-    // Retorno limpo pro front
-    // ===============================
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        id: result.id,
-        status: result.status,
-        transaction_amount: result.transaction_amount,
-        qr_code: qrCode,
-        qr_code_base64: qrCodeBase64
-      })
-    };
-
-  } catch (error) {
-    console.error('❌ ERRO CREATE PIX:', error);
-    
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({
-        error: 'Payment creation failed',
-        message: error.message,
-        details: error.response?.data || null
-      })
-    };
-  }
 };
