@@ -966,13 +966,28 @@
     </div>
 
     <script>
-        const SUPABASE_URL = window.CONFIG.SUPABASE_URL;
-        const SUPABASE_KEY = window.CONFIG.SUPABASE_KEY;
-        const MERCADOPAGO_PUBLIC_KEY = window.CONFIG.MERCADOPAGO_PUBLIC_KEY;
-        const CLIENT_EMAIL = window.CONFIG.CLIENT_EMAIL;
-        const ADMIN_PASSWORD = window.CONFIG.ADMIN_PASSWORD;
+let supabaseClient = null;
+let SUPABASE_URL;
+let SUPABASE_KEY;
+let MERCADOPAGO_PUBLIC_KEY;
+let CLIENT_EMAIL;
+let ADMIN_PASSWORD;
 
-        let supabaseClient = null;
+window.CONFIG_PROMISE.then((config) => {
+    SUPABASE_URL = config.SUPABASE_URL;
+    SUPABASE_KEY = config.SUPABASE_ANON_KEY; 
+    MERCADOPAGO_PUBLIC_KEY = config.MERCADOPAGO_PUBLIC_KEY;
+    CLIENT_EMAIL = config.CLIENT_EMAIL;
+    ADMIN_PASSWORD = config.ADMIN_PASSWORD;
+
+    supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+    console.log("Supabase inicializado");
+    iniciarSistema();
+});
         
         try {
             console.log('🔄 Conectando ao Supabase...');
