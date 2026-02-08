@@ -1858,7 +1858,18 @@
                                     🗑️ Remover
                                 </button>
                             </div>
-                        ` : ''}
+                        ` : `
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button onclick="checkAndReallocateSale('${sale.id}')" 
+                                        style="flex: 1; padding: 8px; background: #ffa500; border: none; border-radius: 8px; color: black; font-weight: 700; cursor: pointer; font-size: 13px;">
+                                    🔍 Verificar Conflitos
+                                </button>
+                                <button onclick="removeApprovedSale('${sale.id}')" 
+                                        style="flex: 1; padding: 8px; background: #ff4444; border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; font-size: 13px;">
+                                    🗑️ Remover Venda
+                                </button>
+                            </div>
+                        `}
                     </div>
                 `;
                 }).join('');
@@ -2136,13 +2147,32 @@
             try {
                 const needsRealocation = conflictNumbers.length;
                 
-                // Selecionar números aleatórios dos disponíveis
-                const shuffled = [...availableNumbers].sort(() => Math.random() - 0.5);
+                // Remover números já mantidos dos disponíveis para evitar duplicatas
+                const availableForReallocation = availableNumbers.filter(num => !freeNumbers.includes(num));
+                
+                if (availableForReallocation.length < needsRealocation) {
+                    alert(`❌ Erro: Números disponíveis insuficientes!\n\nNecessário: ${needsRealocation}\nDisponíveis: ${availableForReallocation.length}`);
+                    return;
+                }
+                
+                // Selecionar números aleatórios ÚNICOS dos disponíveis
+                const shuffled = [...availableForReallocation].sort(() => Math.random() - 0.5);
                 const newNumbers = shuffled.slice(0, needsRealocation);
                 
-                const finalNumbers = [...freeNumbers, ...newNumbers].sort((a, b) => a - b);
+                // Combinar e GARANTIR que não há duplicatas
+                const finalNumbers = [...new Set([...freeNumbers, ...newNumbers])].sort((a, b) => a - b);
 
-                if (!confirm(`Realocar automaticamente?\n\nNúmeros mantidos: ${freeNumbers.join(', ')}\nNovos números: ${newNumbers.join(', ')}\n\nTotal final: ${finalNumbers.join(', ')}`)) {
+                // Verificação de segurança
+                if (finalNumbers.length !== (freeNumbers.length + needsRealocation)) {
+                    console.error('⚠️ Erro de duplicatas detectado!');
+                    console.error('Free:', freeNumbers);
+                    console.error('New:', newNumbers);
+                    console.error('Final:', finalNumbers);
+                    alert('❌ Erro interno: Duplicatas detectadas. Tente novamente.');
+                    return;
+                }
+
+                if (!confirm(`Realocar automaticamente?\n\nNúmeros mantidos (${freeNumbers.length}):\n${freeNumbers.join(', ')}\n\nNovos números (${newNumbers.length}):\n${newNumbers.join(', ')}\n\nTOTAL FINAL (${finalNumbers.length}):\n${finalNumbers.join(', ')}\n\n⚠️ O cliente será notificado!`)) {
                     return;
                 }
 
@@ -2157,7 +2187,7 @@
                 if (error) throw error;
 
                 document.querySelector('[style*="position: fixed"]').remove();
-                alert(`✅ Aprovado e realocado!\n\nNúmeros finais:\n${finalNumbers.join(', ')}\n\n💬 Avise o cliente sobre os novos números!`);
+                alert(`✅ Aprovado e realocado!\n\nNúmeros finais (${finalNumbers.length}):\n${finalNumbers.join(', ')}\n\n💬 IMPORTANTE: Avise o cliente sobre os novos números!`);
                 await reloadAdminData();
 
             } catch (error) {
@@ -2171,6 +2201,252 @@
             renderNumbers();
             await loadSales();
             updateAdminStats();
+        }
+
+        async function removeApprovedSale(saleId) {
+            try {
+                // Buscar dados da venda
+                const { data: sale, error: saleError } = await supabaseClient
+                    .from('raffle_sales')
+                    .select('*')
+                    .eq('id', saleId)
+                    .single();
+
+                if (saleError) throw saleError;
+
+                const confirmMsg = `⚠️ REMOVER VENDA APROVADA?\n\n` +
+                                  `Cliente: ${sale.buyer_name}\n` +
+                                  `Telefone: ${sale.buyer_phone}\n` +
+                                  `Números: ${sale.numbers.join(', ')}\n` +
+                                  `Valor: R$ ${sale.total_amount.toFixed(2)}\n\n` +
+                                  `Os números serão liberados novamente.\n` +
+                                  `Você precisará devolver o valor ao cliente!\n\n` +
+                                  `Confirma a remoção?`;
+
+                if (!confirm(confirmMsg)) return;
+
+                // Deletar venda
+                const { error } = await supabaseClient
+                    .from('raffle_sales')
+                    .delete()
+                    .eq('id', saleId);
+
+                if (error) throw error;
+
+                alert(`✅ Venda removida!\n\nNúmeros liberados: ${sale.numbers.join(', ')}\n\n⚠️ Devolva R$ ${sale.total_amount.toFixed(2)} ao cliente!`);
+                await reloadAdminData();
+
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                alert('❌ Erro: ' + error.message);
+            }
+        }
+
+        async function checkAndReallocateSale(saleId) {
+            try {
+                console.log('🔍 Verificando conflitos automáticos para:', saleId);
+
+                // Buscar dados da venda
+                const { data: sale, error: saleError } = await supabaseClient
+                    .from('raffle_sales')
+                    .select('*')
+                    .eq('id', saleId)
+                    .single();
+
+                if (saleError) throw saleError;
+
+                // Buscar TODAS as outras vendas aprovadas/reservadas
+                const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+                
+                const { data: otherSales, error: checkError } = await supabaseClient
+                    .from('raffle_sales')
+                    .select('numbers, payment_status, id')
+                    .eq('raffle_id', currentRaffle.id)
+                    .neq('id', saleId) // Excluir esta venda
+                    .or(`payment_status.eq.approved,and(payment_status.eq.reserved,created_at.gte.${fiveMinutesAgo})`);
+
+                if (checkError) throw checkError;
+
+                // Criar set de números ocupados
+                const occupiedNumbers = new Set();
+                if (otherSales && otherSales.length > 0) {
+                    otherSales.forEach(s => {
+                        if (s.numbers && Array.isArray(s.numbers)) {
+                            s.numbers.forEach(num => occupiedNumbers.add(num));
+                        }
+                    });
+                }
+
+                // Verificar duplicatas DENTRO da própria venda
+                const saleNumbers = sale.numbers;
+                const uniqueNumbers = [...new Set(saleNumbers)];
+                const hasDuplicates = saleNumbers.length !== uniqueNumbers.length;
+
+                // Verificar conflitos com outras vendas
+                const conflictNumbers = uniqueNumbers.filter(num => occupiedNumbers.has(num));
+                const freeNumbers = uniqueNumbers.filter(num => !occupiedNumbers.has(num));
+
+                console.log('📊 Números da venda:', saleNumbers);
+                console.log('📊 Únicos:', uniqueNumbers);
+                console.log('📊 Duplicatas internas:', hasDuplicates);
+                console.log('❌ Conflitos externos:', conflictNumbers);
+                console.log('✅ Livres:', freeNumbers);
+
+                // SEM CONFLITOS E SEM DUPLICATAS
+                if (conflictNumbers.length === 0 && !hasDuplicates) {
+                    alert(`✅ Nenhum problema detectado!\n\nNúmeros: ${uniqueNumbers.join(', ')}\n\nTudo OK! 👍`);
+                    return;
+                }
+
+                // TEM PROBLEMAS - Verificar números disponíveis
+                const totalNumbers = currentRaffle.total_numbers || 100;
+                const availableNumbers = [];
+                for (let i = 1; i <= totalNumbers; i++) {
+                    if (!occupiedNumbers.has(i) && !uniqueNumbers.includes(i)) {
+                        availableNumbers.push(i);
+                    }
+                }
+
+                const totalProblems = hasDuplicates ? (saleNumbers.length - uniqueNumbers.length + conflictNumbers.length) : conflictNumbers.length;
+                const canReallocate = availableNumbers.length >= totalProblems;
+
+                // Montar modal de verificação
+                showAutoCheckModal(sale, uniqueNumbers, conflictNumbers, availableNumbers, canReallocate, hasDuplicates, saleNumbers);
+
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                alert('❌ Erro: ' + error.message);
+            }
+        }
+
+        function showAutoCheckModal(sale, uniqueNumbers, conflictNumbers, availableNumbers, canReallocate, hasDuplicates, originalNumbers) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.95);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            `;
+
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: rgba(10, 22, 40, 0.95);
+                border: 2px solid #ffa500;
+                border-radius: 20px;
+                padding: 30px;
+                max-width: 600px;
+                width: 100%;
+                max-height: 90vh;
+                overflow-y: auto;
+                backdrop-filter: blur(10px);
+            `;
+
+            const duplicates = originalNumbers.filter((num, idx) => originalNumbers.indexOf(num) !== idx);
+            const freeNumbers = uniqueNumbers.filter(num => !conflictNumbers.includes(num));
+            const needsNew = conflictNumbers.length + duplicates.length;
+
+            content.innerHTML = `
+                <h2 style="font-family: 'Bebas Neue', cursive; font-size: 28px; color: #ffa500; margin-bottom: 20px; text-align: center;">
+                    🔍 VERIFICAÇÃO DE CONFLITOS
+                </h2>
+
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="margin-bottom: 8px;"><strong>Cliente:</strong> ${sale.buyer_name}</div>
+                    <div style="margin-bottom: 8px;"><strong>Telefone:</strong> ${sale.buyer_phone}</div>
+                    <div><strong>Valor:</strong> R$ ${sale.total_amount.toFixed(2)}</div>
+                </div>
+
+                ${hasDuplicates ? `
+                    <div style="background: rgba(255, 165, 0, 0.1); border: 2px solid #ffa500; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                        <div style="font-weight: 700; margin-bottom: 10px; color: #ffa500;">⚠️ DUPLICATAS DETECTADAS</div>
+                        <div style="margin-bottom: 5px;">Números originais: ${originalNumbers.join(', ')}</div>
+                        <div style="color: #ff4444;">Duplicados: ${duplicates.join(', ')}</div>
+                    </div>
+                ` : ''}
+
+                ${conflictNumbers.length > 0 ? `
+                    <div style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ff4444; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                        <div style="font-weight: 700; margin-bottom: 10px; color: #ff4444;">❌ CONFLITOS EXTERNOS</div>
+                        <div>Números ocupados por outras vendas: ${conflictNumbers.join(', ')}</div>
+                    </div>
+                ` : ''}
+
+                <div style="background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6; border-radius: 10px; padding: 15px; margin-bottom: 15px;">
+                    <div style="font-weight: 700; margin-bottom: 10px; color: #60a5fa;">📊 RESUMO:</div>
+                    <div style="margin-bottom: 5px;">Números OK: ${freeNumbers.length} → ${freeNumbers.join(', ')}</div>
+                    <div style="margin-bottom: 5px; color: #ff4444;">Problemas: ${needsNew}</div>
+                    <div style="color: #00ff88;">Disponíveis para realocar: ${availableNumbers.length}</div>
+                </div>
+
+                ${canReallocate ? `
+                    <div style="background: rgba(0, 255, 136, 0.1); border: 2px solid #00ff88; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                        <div style="font-weight: 700; margin-bottom: 10px; color: #00ff88;">✅ REALOCAÇÃO POSSÍVEL</div>
+                        <div>Posso substituir ${needsNew} número(s) por novos aleatórios.</div>
+                        <div style="margin-top: 10px;">
+                            <strong>Resultado final:</strong><br>
+                            → Mantém: ${freeNumbers.join(', ')}<br>
+                            → Novos: ${needsNew} aleatórios
+                        </div>
+                    </div>
+                    <button onclick="executeAutoReallocate('${sale.id}', ${JSON.stringify(freeNumbers)}, ${needsNew}, ${JSON.stringify(availableNumbers)})" 
+                            style="width: 100%; padding: 15px; background: #00ff88; border: none; border-radius: 10px; color: black; font-weight: 700; cursor: pointer; font-size: 16px; margin-bottom: 10px;">
+                        🔄 REALOCAR AUTOMATICAMENTE
+                    </button>
+                ` : `
+                    <div style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ff4444; border-radius: 10px; padding: 15px; margin-bottom: 20px;">
+                        <div style="font-weight: 700; margin-bottom: 10px; color: #ff4444;">❌ REALOCAÇÃO IMPOSSÍVEL</div>
+                        <div>Só restam ${availableNumbers.length} número(s) livre(s).</div>
+                        <div>Precisa de ${needsNew} número(s).</div>
+                    </div>
+                `}
+
+                <button onclick="this.closest('[style*=fixed]').remove()" 
+                        style="width: 100%; padding: 15px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; color: white; font-weight: 600; cursor: pointer; font-size: 16px;">
+                    ✕ Fechar
+                </button>
+            `;
+
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+        }
+
+        async function executeAutoReallocate(saleId, freeNumbers, needsNew, availableNumbers) {
+            try {
+                // Selecionar números aleatórios ÚNICOS
+                const shuffled = [...availableNumbers].sort(() => Math.random() - 0.5);
+                const newNumbers = shuffled.slice(0, needsNew);
+                
+                // Combinar números mantidos + novos e GARANTIR ÚNICOS
+                const finalNumbers = [...new Set([...freeNumbers, ...newNumbers])].sort((a, b) => a - b);
+
+                if (!confirm(`🔄 CONFIRMAR REALOCAÇÃO?\n\nNúmeros mantidos: ${freeNumbers.join(', ')}\n\nNovos números: ${newNumbers.join(', ')}\n\nTOTAL FINAL (${finalNumbers.length}):\n${finalNumbers.join(', ')}\n\n⚠️ O cliente será notificado dos novos números!`)) {
+                    return;
+                }
+
+                const { error } = await supabaseClient
+                    .from('raffle_sales')
+                    .update({ 
+                        numbers: finalNumbers
+                    })
+                    .eq('id', saleId);
+
+                if (error) throw error;
+
+                document.querySelector('[style*="position: fixed"]').remove();
+                alert(`✅ Realocação concluída!\n\nNúmeros finais:\n${finalNumbers.join(', ')}\n\n💬 IMPORTANTE: Avise o cliente sobre os novos números!`);
+                await reloadAdminData();
+
+            } catch (error) {
+                console.error('❌ Erro:', error);
+                alert('❌ Erro: ' + error.message);
+            }
         }
 
         async function removePendingSale(saleId) {
