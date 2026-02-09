@@ -1598,8 +1598,6 @@ async function loadAdminData() {
     }
 
     togglePromoFields();
-
-    // ⬇️ AGORA O AWAIT ESTÁ DENTRO DE FUNÇÃO ASYNC
     await loadSales();
     updateAdminStats();
 
@@ -1612,6 +1610,13 @@ async function loadAdminData() {
         await loadSales();
         updateAdminStats();
     }, 10000);
+}
+        function closeAdminPanel() {
+    document.getElementById('adminPanel').classList.remove('active');
+
+    if (window.adminUpdateInterval) {
+        clearInterval(window.adminUpdateInterval);
+    }
 }
 
         function togglePromoFields() {
