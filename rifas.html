@@ -1540,7 +1540,9 @@ window.CONFIG_PROMISE.then((config) => {
     try {
         const response = await fetch('/.netlify/functions/admin-login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({ password })
         });
 
@@ -1551,18 +1553,18 @@ window.CONFIG_PROMISE.then((config) => {
             return;
         }
 
+        // salva sessão
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminExpires', data.expiresAt);
 
         document.getElementById('adminPanel').classList.add('active');
         loadAdminData();
 
-    } catch (err) {
-        console.error(err);
+    } catch (error) {
+        console.error(error);
         alert('Erro ao conectar com o servidor');
     }
 };
-;
 
 
 
