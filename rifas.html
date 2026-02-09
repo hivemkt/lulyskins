@@ -1447,7 +1447,7 @@ window.CONFIG_PROMISE.then((config) => {
 
         async function startPaymentCheck(paymentId, saleId) {
             let attempts = 0;
-            const maxAttempts = 30; // 5 minutos (30 * 10s)
+            const maxAttempts = 30;
 
             console.log('🔄 Iniciando verificação de pagamento a cada 10 segundos...');
 
@@ -1482,10 +1482,10 @@ window.CONFIG_PROMISE.then((config) => {
                         
                         console.log('✅ PAGAMENTO APROVADO!');
                         
-                        // Mostrar tela de confirmação
+                       
                         showPaymentSuccess(data.numbers);
                         
-                        // Atualizar números vendidos
+                       
                         await loadSoldNumbers();
                         renderNumbers();
                     }
@@ -1523,7 +1523,7 @@ window.CONFIG_PROMISE.then((config) => {
             document.getElementById('pixModal').classList.remove('active');
             document.getElementById('pixModal').style.display = 'none';
             
-            // Limpar seleção
+           
             selectedNumbers.clear();
             updateNumbersDisplay();
             updateCheckout();
@@ -1553,7 +1553,7 @@ window.CONFIG_PROMISE.then((config) => {
             return;
         }
 
-        // salva sessão
+       
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminExpires', data.expiresAt);
 
@@ -1601,7 +1601,7 @@ async function loadAdminData() {
     await loadSales();
     updateAdminStats();
 
-    // Atualização automática
+    
     if (window.adminUpdateInterval) {
         clearInterval(window.adminUpdateInterval);
     }
@@ -1831,14 +1831,14 @@ async function loadAdminData() {
                     return;
                 }
 
-                // Filtrar vendas válidas (aprovadas OU reservadas há menos de 5 min)
+                
                 const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
                 console.log('⏰ Tempo atual:', new Date());
                 console.log('⏰ 5 minutos atrás:', fiveMinutesAgo);
                 
                 const validSales = data.filter(sale => {
                     if (sale.payment_status === 'approved') {
-                        return true; // Sempre mostrar aprovadas
+                        return true; 
                     }
                     if (sale.payment_status === 'reserved') {
                         const saleDate = new Date(sale.created_at);
@@ -2177,7 +2177,7 @@ async function loadAdminData() {
                 
                 const finalNumbers = [...new Set([...freeNumbers, ...newNumbers])].sort((a, b) => a - b);
 
-                // Verificação de segurança
+               
                 if (finalNumbers.length !== (freeNumbers.length + needsRealocation)) {
                     console.error('⚠️ Erro de duplicatas detectado!');
                     console.error('Free:', freeNumbers);
@@ -2220,7 +2220,7 @@ async function loadAdminData() {
 
         async function removeApprovedSale(saleId) {
             try {
-                // Buscar dados da venda
+                
                 const { data: sale, error: saleError } = await supabaseClient
                     .from('raffle_sales')
                     .select('*')
@@ -2279,7 +2279,7 @@ async function loadAdminData() {
 
                 if (checkError) throw checkError;
 
-                // Criar set de números ocupados
+                
                 const occupiedNumbers = new Set();
                 if (otherSales && otherSales.length > 0) {
                     otherSales.forEach(s => {
@@ -2289,12 +2289,12 @@ async function loadAdminData() {
                     });
                 }
 
-                // Verificar duplicatas DENTRO da própria venda
+               
                 const saleNumbers = sale.numbers;
                 const uniqueNumbers = [...new Set(saleNumbers)];
                 const hasDuplicates = saleNumbers.length !== uniqueNumbers.length;
 
-                // Verificar conflitos com outras vendas
+               
                 const conflictNumbers = uniqueNumbers.filter(num => occupiedNumbers.has(num));
                 const freeNumbers = uniqueNumbers.filter(num => !occupiedNumbers.has(num));
 
