@@ -6,7 +6,9 @@ exports.handler = async (event) => {
   if (password !== process.env.ADMIN_PASS) {
     return {
       statusCode: 401,
-      body: JSON.stringify({ message: 'Senha inválida' }),
+      body: JSON.stringify({
+        success: false
+      }),
     };
   }
 
@@ -18,6 +20,10 @@ exports.handler = async (event) => {
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ token }),
+    body: JSON.stringify({
+      success: true,
+      token: token,
+      expiresAt: Date.now() + (30 * 60 * 1000)
+    }),
   };
 };
