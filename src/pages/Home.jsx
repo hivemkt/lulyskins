@@ -108,10 +108,11 @@ export default function Home() {
               <p className="text-lg text-gray-300 mb-8 leading-relaxed">
                 fazer parte da comunidade.
               </p>
-              <a href="#sobre"className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold flex items-center space-x-2">
+              <a href="#sobre"className="inline-flex items-center space-x-1 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition font-semibold text-sm">
   <span>Quero saber mais</span>
-  <ChevronDown className="w-5 h-5" />
-</a>
+  <ChevronDown className="w-4 h-4" />
+  </a>
+
             </div>
             <div className="flex justify-center lg:justify-end">
               <img 
