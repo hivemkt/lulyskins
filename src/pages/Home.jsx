@@ -108,11 +108,13 @@ export default function Home() {
               <p className="text-lg text-gray-300 mb-8 leading-relaxed">
                 fazer parte da comunidade.
               </p>
-              <a href="#sobre"className="inline-flex items-center space-x-1 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition font-semibold text-sm">
-  <span>Quero saber mais</span>
-  <ChevronDown className="w-4 h-4" />
-  </a>
-
+              <button className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold flex items-center space-x-2">
+                <a href="#como-funciona">
+  Quero saber mais
+</a>
+                
+                <ChevronDown className="w-5 h-5" />
+              </button>
             </div>
             <div className="flex justify-center lg:justify-end">
               <img 
@@ -148,7 +150,7 @@ export default function Home() {
       </section>
 
       {/* Como Funciona */}
-      <section className="py-20 px-4" id="sobre">
+      <section id="como-funciona" className="py-20 px-4">
         <div className="container mx-auto">
           <h2 className="text-4xl font-bold text-white text-center mb-12">
             Como Funciona?
@@ -224,7 +226,7 @@ export default function Home() {
                   <span className="text-white font-semibold">O que você precisar, eu encontro.</span>
                 </p>
                 <a 
-                  href="https://wa.me" 
+                  href="https://wa.me/5511945149326?text=Ol%C3%A1!%20Gostaria%20de%20comprar%20skins.%20Como%20funciona%3F" 
                   target="_blank"
                   className="inline-flex items-center space-x-2 px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold"
                 >
@@ -262,7 +264,7 @@ export default function Home() {
                   <span className="text-white font-semibold">Você vai só aceitar a proposta e ficar tranquilo sabendo que vai receber o dinheiro no PIX.</span>
                 </p>
                 <a 
-                  href="https://wa.me" 
+                  href="https://wa.me/5511945149326?text=Ol%C3%A1!%20Gostaria%20de%20vender%20skins.%20Como%20funciona%3F" 
                   target="_blank"
                   className="inline-flex items-center space-x-2 px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold"
                 >
@@ -299,7 +301,7 @@ export default function Home() {
                   <span className="text-white font-semibold">Você entrega suas skins, paga a diferença e sai com a skin dos seus sonhos, tudo na mesma hora.</span>
                 </p>
                 <a 
-                  href="https://wa.me" 
+                  href="https://wa.me/5511945149326?text=Ol%C3%A1!%20Gostaria%20de%20dar%20upgrade%20nas%20minhas%20skins.%20Como%20funciona%3F" 
                   target="_blank"
                   className="inline-flex items-center space-x-2 px-8 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold"
                 >
@@ -347,7 +349,7 @@ export default function Home() {
                     <span>RIFAS</span>
                   </Link>
                   <a 
-                    href="https://wa.me" 
+                    href="https://forms.gle/B3Rbtk3mjn7ENWwD8" 
                     target="_blank"
                     className="inline-flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold"
                   >
@@ -355,7 +357,7 @@ export default function Home() {
                     <span>FORMULÁRIO CSGONET</span>
                   </a>
                   <a 
-                    href="https://wa.me" 
+                    href="https://chat.whatsapp.com/FyPtBGWlJDD6tQqyRvlxpJ" 
                     target="_blank"
                     className="inline-flex items-center justify-center space-x-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition font-semibold"
                   >
