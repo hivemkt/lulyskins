@@ -20,14 +20,19 @@ export default function Raffles() {
     queryKey: ['raffles', activeTab],
     queryFn: async () => {
       let query = supabase
-        .from('raffles')
-        .select('*');
+  .from('raffles')
+  .select('*')
+  .eq('archived', false); // 👈 ESSA LINHA É A CHAVE
 
-      if (activeTab === 'active') {
-        query = query.eq('active', true).order('created_at', { ascending: false });
-      } else {
-        query = query.eq('active', false).order('finished_at', { ascending: false });
-      }
+if (activeTab === 'active') {
+  query = query
+    .eq('active', true)
+    .order('created_at', { ascending: false });
+} else {
+  query = query
+    .eq('active', false)
+    .order('finished_at', { ascending: false });
+}
 
       const { data, error } = await query;
       if (error) throw error;
