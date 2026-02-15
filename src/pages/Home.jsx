@@ -108,10 +108,10 @@ export default function Home() {
               <p className="text-lg text-gray-300 mb-8 leading-relaxed">
                 fazer parte da comunidade.
               </p>
-              <button className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold flex items-center space-x-2">
-                <span>Quero saber mais</span>
-                <ChevronDown className="w-5 h-5" />
-              </button>
+              <a href="#sobre"className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-semibold flex items-center space-x-2">
+  <span>Quero saber mais</span>
+  <ChevronDown className="w-5 h-5" />
+</a>
             </div>
             <div className="flex justify-center lg:justify-end">
               <img 
@@ -147,7 +147,7 @@ export default function Home() {
       </section>
 
       {/* Como Funciona */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4" id="sobre">
         <div className="container mx-auto">
           <h2 className="text-4xl font-bold text-white text-center mb-12">
             Como Funciona?
