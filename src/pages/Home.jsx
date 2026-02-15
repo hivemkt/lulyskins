@@ -515,7 +515,7 @@ const scrollToHowItWorks = () => {
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-semibold">@matheus_felippp</p>
-                  <a href="https://instagram.com" target="_blank" className="text-blue-400 text-xs hover:underline">
+                  <a href="https://www.instagram.com/p/DSqiI5pDfF0/" target="_blank" className="text-blue-400 text-xs hover:underline">
                     Instagram
                   </a>
                 </div>
@@ -537,7 +537,7 @@ const scrollToHowItWorks = () => {
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-semibold">@eliasleysureforee</p>
-                  <a href="https://instagram.com" target="_blank" className="text-blue-400 text-xs hover:underline">
+                  <a href="https://www.instagram.com/p/DSqiI5pDfF0/" target="_blank" className="text-blue-400 text-xs hover:underline">
                     Instagram
                   </a>
                 </div>
@@ -559,7 +559,7 @@ const scrollToHowItWorks = () => {
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-semibold">@marcelopi_</p>
-                  <a href="https://instagram.com" target="_blank" className="text-blue-400 text-xs hover:underline">
+                  <a href="https://www.instagram.com/p/DSqiI5pDfF0/" target="_blank" className="text-blue-400 text-xs hover:underline">
                     Instagram
                   </a>
                 </div>
@@ -581,7 +581,7 @@ const scrollToHowItWorks = () => {
                 </div>
                 <div className="flex-1">
                   <p className="text-white font-semibold">@_pablo_</p>
-                  <a href="https://instagram.com" target="_blank" className="text-blue-400 text-xs hover:underline">
+                  <a href="https://www.instagram.com/p/DSqiI5pDfF0/" target="_blank" className="text-blue-400 text-xs hover:underline">
                     Instagram
                   </a>
                 </div>
