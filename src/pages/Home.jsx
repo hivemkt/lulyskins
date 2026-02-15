@@ -16,6 +16,7 @@ const scrollToHowItWorks = () => {
   // opcional: atualiza o hash sem dar "pulo seco"
   window.history.replaceState(null, "", "#como-funciona");
 
+  // @ts-ignore
   howItWorksRef.current?.scrollIntoView({
     behavior: "smooth",
     block: "start",
@@ -46,6 +47,7 @@ const scrollToHowItWorks = () => {
       const { data, error } = await supabase
         .from('raffles')
         .select('*')
+        .eq("archived", false)
         .eq('active', true)
         .order('created_at', { ascending: false })
         .limit(3);
@@ -164,7 +166,9 @@ const scrollToHowItWorks = () => {
       </section>
 
       {/* Como Funciona */}
-      <section id="como-funciona" ref={howItWorksRef} className="py-20 px-4">
+      <section id="como-funciona" 
+// @ts-ignore
+      ref={howItWorksRef} className="py-20 px-4">
         <div className="container mx-auto">
           <h2 className="text-4xl font-bold text-white text-center mb-12">
             Como Funciona?
@@ -427,9 +431,7 @@ const scrollToHowItWorks = () => {
                         {/* ✅ Ajuste de campo: price -> price_per_number (SEM mexer no layout) */}
                         R$ {Number(raffle.price_per_number ?? 0).toFixed(0)}
                       </div>
-                      <div className="text-xs text-gray-300">
-                        Concorra por apenas 1,95 R$
-                      </div>
+                      
                     </div>
                   </div>
                   <div className="p-6 bg-black/60">
